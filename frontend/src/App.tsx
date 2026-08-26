@@ -1,5 +1,4 @@
 import { useCalculator } from './hooks/useCalculator';
-import type { Operation } from './services/apiService';
 import './App.css';
 
 // Diccionario puro para limpiar el JSX
