@@ -1,8 +1,14 @@
 # Fullstack Calculator
 
-*[Leer en español](./README.es.md)*
 
 A web calculator with a Go backend and a React + TypeScript frontend, containerized with Docker.
+## Design Decisions
+
+To meet the requirement of prioritizing correctness, clarity, and maintainability, the following architectural decisions were made:
+* **Separation of Concerns:** The frontend (React) and backend (Golang) operate as isolated processes. They communicate strictly via a REST API.
+* **Strict Typing and API Contracts:** TypeScript is used on the frontend with interfaces that map exactly to backend responses, preventing runtime casting errors.
+* **Idiomatic Error Handling:** The Go backend does not use exceptions; instead, it returns errors as values ​​that translate into semantic HTTP status codes (e.g., `400 Bad Request` for division by zero).
+* **Maintainability:** The Go code is structured according to community standards (`cmd/api` for the entry point, `internal/` to encapsulate business logic).
 
 ## Architecture
 
@@ -172,3 +178,9 @@ export default defineConfig([
   },
 ])
 ```
+
+Prompts used in Gemini (all of the prompts used followed a structure of: task, context, references, evaluation and iteration):
+
+1st prompt: "I am building a calculator as a technical programming assessment. The backend must be built in Go (Golang) as a microservice, while the frontend must be built using React and TypeScript. The required operations are addition, subtraction, multiplication, division, square root, exponentiation, and percentage. I would like you to act as my project manager and assign me key tasks to complete the project within a four-hour timeframe."
+
+2nd prompt: "Based on what we've built, please guide me in writing the documentation and outlining the key aspects of the project. The documentation must include setup instructions, API examples, and design decisions."
