@@ -1,64 +1,174 @@
-# Full-Stack Calculator (Go + React)
+# Fullstack Calculator
 
-A minimalist web calculator application structured around Clean Architecture principles and RESTful microservices.
+*[Leer en español](./README.es.md)*
 
-## 1. Design Decisions (Design Rationale)
+A web calculator with a Go backend and a React + TypeScript frontend, containerized with Docker.
 
-To meet the requirement of prioritizing correctness, clarity, and maintainability, the following architectural decisions were made:
+## Architecture
 
-* **Separation of Concerns:** The frontend (React) and backend (Golang) operate as isolated processes. They communicate strictly through a REST API.
-* **Strict Typing and API Contracts:** TypeScript was used on the frontend with interfaces that exactly map the backend responses, avoiding runtime casting errors.
-* **Idiomatic Error Handling:** The Go backend does not use exceptions; instead, it returns errors as values that are translated into semantic HTTP status codes (e.g., `400 Bad Request` for division by zero).
-* **Maintainability:** The Go code is structured using community-standard conventions (`cmd/api` for the entry point, `internal/` for encapsulating business logic).
+fullstack-calculator/
+├── backend/ # REST API in Go
+├── frontend/ # React + TypeScript + Vite
+└── docker-compose.yml
 
-## 2. Setup Instructions (Setup)
 
-### Prerequisites
+- **Backend**: exposes a calculation endpoint (`/api/v1/calculate`) supporting addition, subtraction, multiplication, division, exponentiation, square root, cube root, and percentage.
+- **Frontend**: a calculator UI that consumes the backend API.
 
-* [Go](https://go.dev/) 1.21 or higher.
-* [Node.js](https://nodejs.org/) 18 or higher.
+## Requirements
 
-### Running the Backend (Golang)
+- [Docker](https://www.docker.com/) and Docker Compose
+- For local development without Docker: Go 1.26+ and Node.js 22+
+
+## Running the project
+
+### With Docker (recommended)
 
 From the project root:
 
-1. `cd backend`
-2. `go run cmd/api/main.go`
-   *The server will start at [http://localhost:8080](http://localhost:8080)*
+```bash
+docker compose up --build
+```
 
-### Running the Frontend (React + Vite)
+This starts:
+- **Backend** at `http://localhost:8080`
+- **Frontend** at `http://localhost:80`
 
-From the project root in a new terminal:
+To stop:
+```bash
+docker compose down
+```
 
-1. `cd frontend`
-2. `npm install`
-3. `npm run dev`
-   *The interface will be available at [http://localhost:5173](http://localhost:5173)*
+### Without Docker (local development)
 
-## 3. API Usage (API Examples)
+**Backend:**
+```bash
+cd backend
+go run ./cmd/api/main.go
+```
+The server will be available at `http://localhost:8080`.
 
-The backend exposes a single endpoint for all operations, receiving the parameters through the URL (Query Parameters).
+**Frontend:**
+```bash
+cd frontend
+npm install
+npm run dev
+```
+The app will be available at `http://localhost:5173` (Vite's default port).
 
-**Endpoint:** `GET /api/v1/calculate`
+> Note: when running the frontend locally (`npm run dev`), make sure the 
+> backend is running on `localhost:8080`, since the frontend points to 
+> that fixed URL in `apiService.ts`.
 
-**Request Example (cURL):**
+## API
+
+### `GET /api/v1/calculate`
+
+**Query params:**
+
+| Parameter   | Type     | Required | Description                                                                  |
+|-------------|----------|----------|--------------------------------------------------------------------------------|
+| `a`         | number   | Yes      | First operand                                                                 |
+| `b`         | number   | Depends  | Second operand (not required for unary operations like `sqrt`/`cbrt`)         |
+| `operation` | string   | Yes      | One of: `add`, `subtract`, `multiply`, `divide`, `exponentiate`, `sqrt`, `cbrt`, `percentage` |
+
+**Successful response (200):**
+```json
+{ "result": 8 }
+```
+
+**Error response (4xx/5xx):**
+```json
+{ "error": "Cannot divide by zero" }
+```
+
+## Testing
+
+The frontend has a complete unit and integration test suite (Vitest + React Testing Library), with 100% coverage across business logic, the API layer, and UI components.
 
 ```bash
-curl "http://localhost:8080/api/v1/calculate?a=10&b=5&operation=divide"
+cd frontend
+npm test               # watch mode
+npm run test:coverage  # single run with coverage report
 ```
 
-**Response Example (Success - HTTP 200):**
+The HTML coverage report is generated at `frontend/coverage/index.html`.
 
-```json
-{
-  "result": 2
-}
+## Tech stack
+
+**Frontend:**
+- React 19 + TypeScript
+- Vite
+- Vitest + React Testing Library + jest-dom
+
+**Backend:**
+- Go 1.26
+
+**Infrastructure:**
+- Docker + Docker Compose
+- Nginx (serving the frontend's production build)
+
+---
+
+## Frontend development notes (Vite details)
+
+This project uses Vite as its bundler, with HMR and ESLint configured. Two official plugins are currently available:
+
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+
+### React Compiler
+
+The React Compiler is not enabled on this project due to its impact on dev and build performance. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+
+### Expanding the ESLint configuration
+
+If you're developing for production, it's recommended to enable type-aware lint rules:
+
+```js
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      tseslint.configs.recommendedTypeChecked,
+      // Or, for stricter rules:
+      tseslint.configs.strictTypeChecked,
+      // Optionally, add stylistic rules:
+      tseslint.configs.stylisticTypeChecked,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+])
 ```
 
-**Response Example (Error - HTTP 400):**
+You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
 
-```json
-{
-  "error": "cannot divide by zero"
-}
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      reactX.configs['recommended-typescript'],
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+])
 ```
