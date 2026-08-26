@@ -20,7 +20,7 @@ func respondWithError(w http.ResponseWriter, code int, message string) {
 func CalculatorHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	if r.Method != http.MethodGet {
-		respondWithError(w, http.StatusMethodNotAllowed, "Método no permitido")
+		respondWithError(w, http.StatusMethodNotAllowed, "Non-valid method")
 		return
 	}
 
@@ -32,15 +32,20 @@ func CalculatorHandler(w http.ResponseWriter, r *http.Request) {
 	// Validates and parses 'a'
 	a, err := strconv.ParseFloat(aStr, 64)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "El parámetro 'a' debe ser un número válido")
+		respondWithError(w, http.StatusBadRequest, "Parameter 'a' must be a valid number")
 		return
 	}
 
+	var b float64
 	// Validates and parses 'b'
-	b, err := strconv.ParseFloat(bStr, 64)
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "El parámetro 'b' debe ser un número válido")
-		return
+	isBinary := operation == "add" || operation == "subtract" || operation == "multiply" || operation == "divide" || operation == "exponentiate"
+
+	if isBinary {
+		b, err = strconv.ParseFloat(bStr, 64)
+		if err != nil {
+			respondWithError(w, http.StatusBadRequest, "Parameter 'b' must be a valid number")
+			return
+		}
 	}
 
 	var result float64
@@ -48,7 +53,7 @@ func CalculatorHandler(w http.ResponseWriter, r *http.Request) {
 	switch operation {
 	case "add":
 		result = calculator.Add(a, b)
-	case "substract":
+	case "subtract":
 		result = calculator.Subtract(a, b)
 	case "multiply":
 		result = calculator.Multiply(a, b)
@@ -59,10 +64,22 @@ func CalculatorHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		result = res
+	case "exponentiate":
+		result = calculator.Exponentiate(a, b)
+	case "sqrt":
+		res, err := calculator.SquareRoot(a)
+		if err != nil {
+			respondWithError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		result = res
+	case "percentage":
+		result = calculator.Percentage(a)
 	default:
-		respondWithError(w, http.StatusBadRequest, "Operación no soportada")
+		respondWithError(w, http.StatusBadRequest, "Operation not supported")
 		return
 	}
+
 	// Responds with success in JSON
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

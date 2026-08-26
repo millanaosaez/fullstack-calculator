@@ -1,75 +1,71 @@
-import { useState } from 'react';
-import { fetchCalculation } from './services/apiService';
+import { useCalculator } from './hooks/useCalculator';
 import type { Operation } from './services/apiService';
-import './App.css'; 
+import './App.css';
+
+// Diccionario puro para limpiar el JSX
+const OPERATION_SYMBOLS: Record<string, string> = {
+  add: '+',
+  subtract: '-',
+  multiply: '×',
+  divide: '÷',
+  percentage: '%',
+  exponentiate: '^x',
+  sqrt: '^1/2'
+};
 
 function App() {
-  
-  const [a, setA] = useState<string>('');
-  const [b, setB] = useState<string>('');
-  const [operation, setOperation] = useState<Operation>('add');
-  const [result, setResult] = useState<number | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // Inyección de dependencias a través del Custom Hook
+  const {
+    currentValue,
+    previousValue,
+    operation,
+    error,
+    handleNumber,
+    handleOperation,
+    handleEqual,
+    handleClear
+  } = useCalculator();
 
-  
-  const handleCalculate = async () => {
-    
-    setResult(null);
-    setError(null);
-
-    
-    if (!a || !b) {
-      setError("Por favor, ingrese ambos números.");
-      return;
-    }
-
-    try {
-      
-      const data = await fetchCalculation(a, b, operation);
-      setResult(data);
-    } catch (err) {
-      
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("Ocurrió un error desconocido");
-      }
-    }
-  };
-
-  
   return (
-    <div className="calculator-container">
-      <h1>FullStack Calculator</h1>
-      
-      <div className="inputs">
-        <input 
-          type="number" 
-          value={a} 
-          onChange={(e) => setA(e.target.value)} 
-          placeholder="Número A"
-        />
+    <div className="calculator-wrapper">
+      <div className="calculator">
+        <div className="display">
+          <div className="history">
+            {previousValue} {operation ? OPERATION_SYMBOLS[operation] : ''}
+          </div>
+          <div className="current" style={{ color: error ? '#ff4a4a' : 'white' }}>
+            {error ? 'Error' : currentValue}
+          </div>
+        </div>
         
-        <select value={operation} onChange={(e) => setOperation(e.target.value as Operation)}>
-          <option value="add">Sumar (+)</option>
-          <option value="subtract">Restar (-)</option>
-          <option value="multiply">Multiplicar (*)</option>
-          <option value="divide">Dividir (/)</option>
-        </select>
-        
-        <input 
-          type="number" 
-          value={b} 
-          onChange={(e) => setB(e.target.value)} 
-          placeholder="Número B"
-        />
+        <div className="keypad">
+          <button className="btn-secondary" onClick={handleClear}>C</button>
+          <button className="btn-secondary" onClick={() => handleOperation('sqrt')}>^1/2</button>
+          <button className="btn-secondary" onClick={() => handleOperation('percentage')}>%</button>
+          <button className="btn-operator" onClick={() => handleOperation('divide')}>÷</button>
+          
+          <button className="btn-number" onClick={() => handleNumber('7')}>7</button>
+          <button className="btn-number" onClick={() => handleNumber('8')}>8</button>
+          <button className="btn-number" onClick={() => handleNumber('9')}>9</button>
+          <button className="btn-operator" onClick={() => handleOperation('multiply')}>×</button>
+          
+          <button className="btn-number" onClick={() => handleNumber('4')}>4</button>
+          <button className="btn-number" onClick={() => handleNumber('5')}>5</button>
+          <button className="btn-number" onClick={() => handleNumber('6')}>6</button>
+          <button className="btn-operator" onClick={() => handleOperation('subtract')}>−</button>
+          
+          <button className="btn-number" onClick={() => handleNumber('1')}>1</button>
+          <button className="btn-number" onClick={() => handleNumber('2')}>2</button>
+          <button className="btn-number" onClick={() => handleNumber('3')}>3</button>
+          <button className="btn-operator" onClick={() => handleOperation('add')}>+</button>
+          
+          <button className="btn-operator" onClick={() => handleOperation('exponentiate')}>^x</button>
+          <button className="btn-number" onClick={() => handleNumber('0')}>0</button>
+          <button className="btn-number" onClick={() => handleNumber('.')}>,</button>
+          <button className="btn-accent" onClick={handleEqual}>=</button>
+        </div>
       </div>
-
-      <button onClick={handleCalculate}>Calcular</button>
-
-      {/* RENDERIZADO CONDICIONAL: Mostramos error o resultado dependiendo del estado */}
-      {error && <div className="error-message" style={{ color: 'red' }}>Error: {error}</div>}
-      {result !== null && <div className="result-message" style={{ color: 'green' }}>Resultado: {result}</div>}
+      {error && <div className="error-toast">{error}</div>}
     </div>
   );
 }
