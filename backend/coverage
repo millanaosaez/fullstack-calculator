@@ -1,0 +1,7 @@
+mode: set
+calculator-api/internal/calculator/operations.go:7.32,9.2 1 1
+calculator-api/internal/calculator/operations.go:11.37,13.2 1 1
+calculator-api/internal/calculator/operations.go:15.37,17.2 1 1
+calculator-api/internal/calculator/operations.go:19.44,20.12 1 1
+calculator-api/internal/calculator/operations.go:20.12,22.3 1 1
+calculator-api/internal/calculator/operations.go:23.2,23.19 1 1

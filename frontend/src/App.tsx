@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { fetchCalculation } from './services/apiService';
 import type { Operation } from './services/apiService';
-import './App.css'; // Asumimos estilos básicos
+import './App.css'; 
 
 function App() {
   
