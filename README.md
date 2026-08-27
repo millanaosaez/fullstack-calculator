@@ -90,6 +90,14 @@ The app will be available at `http://localhost:5173` (Vite's default port).
 
 ## Testing
 
+The backend has a complete unit test for each business logic Function
+
+```bash
+cd backend
+go test               # runs the unit test
+go test ./internal/calculator/ -coverprofile=coverage.out  #  run with coverage report
+```
+
 The frontend has a complete unit and integration test suite (Vitest + React Testing Library), with 100% coverage across business logic, the API layer, and UI components.
 
 ```bash
